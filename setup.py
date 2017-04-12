@@ -7,12 +7,12 @@ if sys.version_info.major < 3:
 setup(
     name='littlefish',
     packages=['littlefish'],
-    version='0.0.1',
+    version='0.0.2',
     description='Flask webapp utility functions by Little Fish Solutions LTD',
     author='Stephen Brown (Little Fish Solutions LTD)',
     author_email='opensource@littlefish.solutions',
     url='https://github.com/stevelittlefish/littlefish',
-    download_url='https://github.com/stevelittlefish/littlefish/archive/v0.0.1.tar.gz',
+    download_url='https://github.com/stevelittlefish/littlefish/archive/v0.0.2.tar.gz',
     keywords=['flask', 'utility', 'time', 'pager'],
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
@@ -20,7 +20,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3',
-        'Topic :: Utilities'
+        'Topic :: Software Development :: Libraries'
     ],
     install_requires=[
         'geoip2>=2.4.2',
@@ -30,8 +30,8 @@ setup(
         'PyMarkovChain>=1.8',
         'pytz>=2017.2',
         'python-dateutil>=2.6.0',
-        'Flask==0.12.0',
-        'Flask-SQLAlchemy==2.0',
+        'Flask>=0.12.0',
+        'Flask-SQLAlchemy>=2.0',
         'Jinja2>=2.9.0',
         'lxml>=3.7.0'
     ]
