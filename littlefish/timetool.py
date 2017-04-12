@@ -5,8 +5,8 @@ This contains functions to manipulate and display timestamps
 import logging
 import datetime
 import calendar
-import dateutil.parser
 
+import dateutil.parser
 import pytz
 
 __author__ = 'Stephen Brown (Little Fish Solutions LTD)'

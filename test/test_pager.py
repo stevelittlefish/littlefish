@@ -5,7 +5,7 @@ Unit tests for pagers
 import logging
 import pytest
 
-from lfs.pager import SimplePager
+from littlefish.pager import SimplePager
 
 __author__ = 'Stephen Brown (Little Fish Solutions LTD)'
 

@@ -4,7 +4,7 @@ Unit tests for util.py
 
 import pytest
 
-from ..util import format_number_1dp, format_number_2dp, format_price_commas_no_point,\
+from littlefish.util import format_number_1dp, format_number_2dp, format_price_commas_no_point,\
     format_commas, format_number_2dp_trailing_zeros, format_price, format_multiline_html,\
     to_paragraphs, format_ordinal, format_filesize, is_ascii, extension_from_filename
 

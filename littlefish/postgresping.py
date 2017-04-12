@@ -3,13 +3,13 @@ This will test the connection before each query to see if the database has disco
 Looks like magic to me...
 """
 
-__author__ = 'Stephen Brown (Little Fish Solutions LTD)'
-
 import logging
 
 from sqlalchemy import exc
 from sqlalchemy import event
 from sqlalchemy.pool import Pool
+
+__author__ = 'Stephen Brown (Little Fish Solutions LTD)'
 
 log = logging.getLogger(__name__)
 

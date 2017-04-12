@@ -7,9 +7,8 @@ import datetime
 import traceback
 
 from . import systemevent
-from models import db, QueuedEmail
-from lfs import timetool
-from lfs import lfsmailer
+from .. import timetool
+from .. import lfsmailer
 
 __author__ = 'Stephen Brown (Little Fish Solutions LTD)'
 
@@ -20,6 +19,45 @@ STATUS_SENDING = 'SENDING'
 STATUS_SENT = 'SENT'
 STATUS_FAILED = 'FAILED'
 STATUS_RETRY = 'RETRY'
+
+_db = None
+_QueuedEmail = None
+
+# QueuedEmail model:
+#
+# class QueuedEmail(db.Model):
+#     id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+#     html = db.Column(db.Boolean, nullable=False)
+#     timestamp = db.Column(db.DateTime, nullable=False)
+#     to_addresses = db.Column(db.String, nullable=False)
+#     from_address = db.Column(db.String, nullable=False)
+#     subject = db.Column(db.String, nullable=False)
+#     body = db.Column(db.String, nullable=False)
+#     status = db.Column(db.String, nullable=False)
+#     attempts = db.Column(db.SmallInteger, nullable=False)
+#     last_send_timestamp = db.Column(db.DateTime, nullable=True)
+#
+#     def __init__(self, html, to_addresses, from_address, subject, body, status):
+#         self.html = html
+#         self.to_addresses = to_addresses
+#         self.from_address = from_address
+#         self.subject = subject
+#         self.body = body
+#
+#         self.timestamp = datetime.datetime.utcnow()
+#         self.status = status
+#         self.attempts = 0
+
+
+def init(db, queued_email_model_class):
+    """
+    :param db: Flask-SQLAlchemy database object
+    :param queued_email_model_class: Model class (see above example)
+    """
+    global _db, _QueuedEmail
+
+    _db = db
+    _QueuedEmail = queued_email_model_class
 
 
 class ProcessEmailQueueSystemEvent(systemevent.SystemEvent):
@@ -32,29 +70,29 @@ class ProcessEmailQueueSystemEvent(systemevent.SystemEvent):
         self.max_attempts = app.config['EMAIL_QUEUE_MAX_ATTEMPTS']
 
     def process(self):
-        queued_emails = QueuedEmail.query.filter(db.or_(QueuedEmail.status == STATUS_QUEUED,
-                                                        QueuedEmail.status == STATUS_RETRY)).all()
+        queued_emails = _QueuedEmail.query.filter(_db.or_(_QueuedEmail.status == STATUS_QUEUED,
+                                                          _QueuedEmail.status == STATUS_RETRY)).all()
         for email in queued_emails:
             email.status = STATUS_SENDING
             email.attempts += 1
-            db.session.commit()
+            _db.session.commit()
             try:
                 recipients = [s.strip() for s in email.to_addresses.split(',')]
                 lfsmailer.send_mail(recipients, email.subject, email.body, html=email.html,
                                     from_address=email.from_address)
                 email.status = STATUS_SENT
-                db.session.commit()
+                _db.session.commit()
             except Exception as e:
                 if email.attempts < self.max_attempts:
                     stack_trace = traceback.format_exc()
 
                     log.warning('Email attempt failed, retrying. Exception: %s\n%s' % (e, stack_trace))
                     email.status = STATUS_RETRY
-                    db.session.commit()
+                    _db.session.commit()
                 else:
                     log.exception('Email sending failed. Max retries exceeded')
                     email.status = STATUS_FAILED
-                    db.session.commit()
+                    _db.session.commit()
 
 
 class EmailQueueCleanUpSystemEvent(systemevent.SystemEvent):
@@ -67,8 +105,8 @@ class EmailQueueCleanUpSystemEvent(systemevent.SystemEvent):
         max_age = datetime.timedelta(days=self.max_age)
         delete_time = datetime.datetime.utcnow() - max_age
         log.info('Cleaning up emails queued before %s' % timetool.format_datetime_long(delete_time))
-        num_deleted = QueuedEmail.query.filter(QueuedEmail.timestamp < delete_time).delete()
-        db.session.commit()
+        num_deleted = _QueuedEmail.query.filter(_QueuedEmail.timestamp < delete_time).delete()
+        _db.session.commit()
         log.info('Deleted %s emails' % num_deleted)
 
 
@@ -89,7 +127,7 @@ def queue_email(to_addresses, from_address, subject, body, commit=True, html=Tru
     from models import QueuedEmail
 
     if session is None:
-        session = db.session
+        session = _db.session
 
     log.info('Queuing mail to %s: %s' % (to_addresses, subject))
     queued_email = QueuedEmail(html, to_addresses, from_address, subject, body, STATUS_QUEUED)

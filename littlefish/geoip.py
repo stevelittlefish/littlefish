@@ -22,9 +22,9 @@ def init(geolite2_path):
 
 def get_geoip_data(ip):
     if should_ignore_ip_address(ip):
-        return None;
+        return None
     return _reader.city(ip)
 
 
 def should_ignore_ip_address(ip):
-    return "127.0.0.1" in ip;
+    return "127.0.0.1" in ip
