@@ -183,9 +183,9 @@ def format_duration_seconds(seconds):
     m = seconds // 60
     # I'm sure there is a better way of doing this!
     if m >= 10:
-        return "%s:%s" % (h, m)
+        return "%i:%i" % (h, m)
     else:
-        return "%s:0%s" % (h, m)
+        return "%i:0%i" % (h, m)
 
 
 def add_working_days(num_days, date=None, include_saturday=False):
