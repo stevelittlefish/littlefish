@@ -1,0 +1,18 @@
+Metadata-Version: 1.1
+Name: littlefish
+Version: 0.0.5
+Summary: Flask webapp utility functions by Little Fish Solutions LTD
+Home-page: https://github.com/stevelittlefish/littlefish
+Author: Stephen Brown (Little Fish Solutions LTD)
+Author-email: opensource@littlefish.solutions
+License: UNKNOWN
+Download-URL: https://github.com/stevelittlefish/littlefish/archive/v0.0.5.tar.gz
+Description: UNKNOWN
+Keywords: flask,utility,time,pager
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Framework :: Flask
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Software Development :: Libraries
