@@ -20,6 +20,23 @@ def get_all_text(html):
     return soup.find_all(text=True)
 
 
+def tag_to_text(tag):
+    """
+    :param tag: Beautiful soup tag
+    :return: Flattened text
+    """
+    out = []
+    for item in tag.contents:
+        # If it has a name, it is a tag
+        if item.name:
+            out.append(tag_to_text(item))
+        else:
+            # Just text!
+            out.append(item)
+
+    return ' '.join(out)
+
+
 def split_line(line, min_line_length=30, max_line_length=100):
     """
     This is designed to work with prettified output from Beautiful Soup which indents with a single space.
