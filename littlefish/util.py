@@ -105,6 +105,18 @@ def format_price(price):
         return jinja2.Markup('-&pound;%0.2f' % -price)
 
 
+def format_price_commas(price):
+    """
+    Formats prices, rounding (i.e. to the nearest whole number of pounds) with commas
+    """
+    if price is None:
+        return None
+    if price >= 0:
+        return jinja2.Markup('&pound;{:,.2f}'.format(price))
+    else:
+        return jinja2.Markup('-&pound;{:,.2f}'.format(-price))
+
+
 def format_price_commas_no_point(price):
     """
     Formats prices, rounding (i.e. to the nearest whole number of pounds) with commas
