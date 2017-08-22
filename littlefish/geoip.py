@@ -5,6 +5,7 @@ For doing geo ip lookups
 import logging
 
 import geoip2.database
+import IPy
 
 __author__ = 'Yu Lee Paul (Little Fish Solutions LTD)'
 
@@ -26,5 +27,7 @@ def get_geoip_data(ip):
     return _reader.city(ip)
 
 
-def should_ignore_ip_address(ip):
-    return "127.0.0.1" in ip
+def should_ignore_ip_address(ip_address):
+    ip = IPy.IP(ip_address)
+    ip_type = ip.iptype()
+    return ip_type == 'PRIVATE' or ip_type == 'LOOPBACK'
