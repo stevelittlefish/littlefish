@@ -293,3 +293,9 @@ class TextGenerator(object):
 
         return ' '.join(parts)
 
+    def generate_adjective(self):
+        return random.choice(self.adjectives)
+
+    def generate_noun(self):
+        return random.choice(self.nouns)
+
