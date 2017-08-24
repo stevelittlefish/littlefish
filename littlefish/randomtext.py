@@ -4,6 +4,7 @@ Contains code for generating random placeholder text
 
 import logging
 import random
+import os
 
 import pymarkovchain
 
@@ -204,10 +205,16 @@ QUALIFIERS = [
 
 
 class TextGenerator(object):
-    def __init__(self, filename, escape_quotes=False):
+    def __init__(self, filename=None, escape_quotes=False):
         """
         :param filename: Path to a markov chain data file (generated using markov_tool)
         """
+        if filename is None:
+            path = os.path.dirname(os.path.realpath(__file__))
+            filename = os.path.join(path, 'test_data', 'markov.dat')
+        
+        log.info('Loading Markov Chains from "{}"'.format(filename))
+
         self.markov = pymarkovchain.MarkovChain(filename)
         self.escape_quotes = escape_quotes
         self.nouns = NOUNS
