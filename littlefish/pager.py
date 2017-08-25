@@ -100,6 +100,48 @@ class Pager(object):
     @property
     def empty(self):
         return self.total_pages == 0
+    
+    def get_full_page_url(self, page_number, scheme=None):
+        """Get the full, external URL for this page, optinally with the passed in URL scheme"""
+        args = dict(
+            request.view_args,
+            _external=True,
+        )
+
+        if scheme is not None:
+            args['_scheme'] = scheme
+        
+        if page_number != 1:
+            args['page'] = page_number
+
+        return url_for(request.endpoint, **args)
+
+
+    def get_canonical_url(self, scheme=None):
+        """Get the canonical page URL"""
+        return self.get_full_page_url(self.page_number, scheme=scheme)
+
+    def render_prev_next_links(self, scheme=None):
+        """Render the rel=prev and rel=next links to a Markup object for injection into a template"""
+        output = ''
+
+        if self.has_prev:
+            output += '<link rel="prev" href="{}" />\n'.format(self.get_full_page_url(self.prev, scheme=scheme))
+        
+        if self.has_next:
+            output += '<link rel="next" href="{}" />\n'.format(self.get_full_page_url(self.next, scheme=scheme))
+
+        return Markup(output)
+
+
+    def render_canonical_link(self, scheme=None):
+        """Render the rel=canonical link to a Markup object for injection into a template"""
+        return Markup('<link rel="canonical" href="{}" />'.format(self.get_canonical_url(scheme=scheme)))
+
+    def render_seo_links(self, scheme=None):
+        """Render the rel=canonical, rel=prev and rel=next links to a Markup object for injection into a template"""
+        return self.render_prev_next_links(scheme=scheme) +\
+            self.render_canonical_link(scheme=scheme)
 
 
 class SimplePager(Pager):
