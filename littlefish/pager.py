@@ -4,6 +4,8 @@ A simple class to help with paging result sets
 
 import logging
 
+from flask import request, url_for, Markup
+
 __author__ = 'Stephen Brown (Little Fish Solutions LTD)'
 
 log = logging.getLogger(__name__)
