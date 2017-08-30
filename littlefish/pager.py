@@ -142,9 +142,12 @@ class Pager(object):
 
     def render_seo_links(self, scheme=None):
         """Render the rel=canonical, rel=prev and rel=next links to a Markup object for injection into a template"""
-        return self.render_prev_next_links(scheme=scheme) +\
-            self.render_canonical_link(scheme=scheme)
+        out = self.render_prev_next_links(scheme=scheme)
 
+        if self.total_pages == 1:
+            out += self.render_canonical_link(scheme=scheme)
+
+        return out
 
 class SimplePager(Pager):
     """
