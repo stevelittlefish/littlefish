@@ -304,6 +304,11 @@ def unix_time(dt=None, as_int=False):
     return delta.total_seconds()
 
 
+def current_time_millis(dt=None):
+    unix_time_seconds = unix_time(dt=dt)
+    return int(unix_time() * 1000)
+
+
 def format_datetime_iso8601(datetime):
     return datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
 
