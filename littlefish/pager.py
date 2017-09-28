@@ -46,6 +46,18 @@ class Pager(object):
 
         self.items = query[self.offset:self.offset + self.page_size]
     
+    def get_first_item_from_next_page(self):
+        if self.has_next:
+            return self.query[self.offset + self.page_size]
+
+        return None
+    
+    def get_last_item_from_previous_page(self):
+        if self.has_prev:
+            return self.query[self.offset - 1]
+
+        return None
+
     @property
     def has_prev(self):
         return self.page_number > 1
@@ -118,7 +130,6 @@ class Pager(object):
 
         return url_for(request.endpoint, **args)
 
-
     def get_canonical_url(self, scheme=None):
         """Get the canonical page URL"""
         return self.get_full_page_url(self.page_number, scheme=scheme)
@@ -135,7 +146,6 @@ class Pager(object):
 
         return Markup(output)
 
-
     def render_canonical_link(self, scheme=None):
         """Render the rel=canonical link to a Markup object for injection into a template"""
         return Markup('<link rel="canonical" href="{}" />'.format(self.get_canonical_url(scheme=scheme)))
@@ -148,6 +158,7 @@ class Pager(object):
             out += self.render_canonical_link(scheme=scheme)
 
         return out
+
 
 class SimplePager(Pager):
     """
