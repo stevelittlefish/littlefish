@@ -25,6 +25,7 @@ default_email_from = None
 email_to_override = None
 dump_email_body = None
 _configured = False
+_error_reporting_obscured_fields = None
 
 
 def init(app):
@@ -181,7 +182,7 @@ Message:
             # Obscure password field and prettify a little bit
             form_dict = dict(request.form)
             for key in form_dict:
-                if 'password' in key.lower():
+                if key.lower() in _error_reporting_obscured_fields:
                     form_dict[key] = '******'
                 elif len(form_dict[key]) == 1:
                     form_dict[key] = form_dict[key][0]
@@ -245,7 +246,12 @@ Message:
             self.handleError(record)
 
 
-def init_error_emails(send_error_emails, send_warning_emails, from_address, to_addresses, subject, logger=None):
+def init_error_emails(send_error_emails, send_warning_emails, from_address, to_addresses, subject,
+                      logger=None, obscured_fields=['password']):
+    global _error_reporting_obscured_fields
+    
+    _error_reporting_obscured_fields = obscured_fields
+
     if send_error_emails or send_warning_emails:
         log.info('Setting up error / warning emails')
         error_handler = LfsSmtpHandler(from_address, to_addresses, subject)
