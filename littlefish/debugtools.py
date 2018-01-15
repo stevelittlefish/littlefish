@@ -4,6 +4,7 @@ Debugging stuff
 
 import logging
 import inspect
+import pprint
 
 __author__ = 'Stephen Brown (Little Fish Solutions LTD)'
 
@@ -36,6 +37,12 @@ def debug_print(s=DONT_PRINT, **kwargs):
             lesser_debug_print('{} = {}'.format(k, v))
 
         first = False
+
+
+def print_vars(**kwargs):
+    for k, v in kwargs.items():
+        pretty = pprint.pformat(v)
+        debug_print('{}: {} = {}'.format(type(v), k, pretty))
 
 
 def print_spacer(level=3):
