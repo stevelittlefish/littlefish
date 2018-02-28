@@ -26,6 +26,8 @@ SYMBOLS = '!?@%$'
 
 BASE62_MAP = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
+PHONE_NUMBER_DISALLOWED_SYMBOLS = re.compile('[^0-9+]+')
+
 paragraph_split_regex = re.compile(r'\n\n+')
 
 
@@ -183,6 +185,14 @@ def format_ordinal(n):
         return str(n) + 'th'
     else:
         return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, "th")
+
+
+def format_phone_number(phone_number):
+    """Removes unnecessary symbols from phone numbers"""
+    if phone_number is None:
+        return None
+
+    return PHONE_NUMBER_DISALLOWED_SYMBOLS.sub('', phone_number)
 
 
 def is_ascii(s):
@@ -369,3 +379,5 @@ def print_sql_debug_timings():
         log.info('<< %s queries took %fs >>' % (total_queries, total_time))
     except:
         log.exception('Exception in SQL profiling code.  Ignoring.')
+
+
