@@ -3,6 +3,7 @@ Image processing utility functions
 """
 
 import logging
+import io
 
 import PIL.Image
 import PIL.ImageEnhance
@@ -111,12 +112,14 @@ def resize_crop_image(image, dest_w, dest_h, pad_when_tall=False):
         return image
 
 
-def resize_pad_image(image, dest_w, dest_h):
+def resize_pad_image(image, dest_w, dest_h, pad_with_transparent=False):
     """
     Resize the image and pad to the correct aspect ratio.
     :param image: PIL.Image
     :param dest_w: Target width
     :param dest_h: Target height
+    :param pad_with_transparent: If True, make additional padding transparent
+
     :return: Scaled and padded image
     """
     dest_w = float(dest_w)
@@ -150,7 +153,13 @@ def resize_pad_image(image, dest_w, dest_h):
     # the mode
     mode = scaled_image.mode
     log.debug('Padding image with mode: "{}"'.format(mode))
-    if mode == 'P':
+    if pad_with_transparent and mode != 'RGBA':
+        old_mode = mode
+        mode = 'RGBA'
+        scaled_image = scaled_image.convert(mode)
+        log.debug('Changed mode from "{}" to "{}"'.format(old_mode, mode))
+
+    elif mode == 'P':
         if 'transparency' in scaled_image.info:
             mode = 'RGBA'
         else:
@@ -158,10 +167,13 @@ def resize_pad_image(image, dest_w, dest_h):
 
         scaled_image = scaled_image.convert(mode)
         log.debug('Changed mode from "P" to "{}"'.format(mode))
-
-    # Get the pixel colour for coordinate (0,0)
-    pixels = scaled_image.load()
-    pad_colour = pixels[0, 0]
+    
+    if pad_with_transparent:
+        pad_colour = (255, 255, 255, 0)
+    else:
+        # Get the pixel colour for coordinate (0,0)
+        pixels = scaled_image.load()
+        pad_colour = pixels[0, 0]
     
     padded_image = PIL.Image.new(mode, (int(dest_w), int(dest_h)), pad_colour)
     padded_image.paste(scaled_image, offset)
@@ -197,4 +209,10 @@ def resize_image_to_fit_height(image, dest_h):
     scaled_image = image.resize((int(dest_w), int(dest_h)), PIL.Image.ANTIALIAS)
 
     return scaled_image
+
+
+def image_to_bytes(image, format='PNG', quality=95):
+    image_io = io.BytesIO()
+    image.save(image_io, format=format, quality=quality)
+    return image_io.getvalue()
 

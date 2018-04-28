@@ -15,6 +15,9 @@ import flask
 from flask_sqlalchemy import get_debug_queries
 import jinja2
 
+# For backwards compatibility
+from .fileutil import extension_from_filename, read_file, write_file  # noqa
+
 __author__ = 'Stephen Brown (Little Fish Solutions LTD)'
 
 log = logging.getLogger(__name__)
@@ -29,6 +32,59 @@ BASE62_MAP = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 PHONE_NUMBER_DISALLOWED_SYMBOLS = re.compile('[^0-9+]+')
 
 paragraph_split_regex = re.compile(r'\n\n+')
+
+
+class UpdateLogger(object):
+    """
+    Usefull class for logging updates to things when you're importing them
+    """
+    def __init__(self, prefix='', use_logger=False):
+        self.prefix = prefix
+        self.lines = []
+        self.use_logger = use_logger
+    
+    def log_update(self, s):
+        self.lines.append('{}{}'.format(self.prefix, s))
+
+    def log_variable_update(self, variable_name, old_value=None, new_value=None):
+        if old_value is None and new_value is None:
+            self.lines.append('{}Updating {}'.format(
+                self.prefix, variable_name
+            ))
+        else:
+            self.lines.append('{}Updating {} from {} -> {}'.format(
+                self.prefix, variable_name, old_value, new_value
+            ))
+
+    def log_item_added(self, item_type, value):
+        self.lines.append('{}+ Adding {}: {}'.format(
+            self.prefix, item_type, value
+        ))
+    
+    def log_item_deleted(self, item_type, value):
+        self.lines.append('{}- Deleting {}: {}'.format(
+            self.prefix, item_type, value
+        ))
+
+    def log_item_modified(self, item_type, value):
+        self.lines.append('{}~ Modifying {}: {}'.format(
+            self.prefix, item_type, value
+        ))
+
+    @property
+    def has_updates(self):
+        return len(self.lines) > 0
+
+    def print_updates(self, clear=True):
+        if self.has_updates:
+            for line in self.lines:
+                if self.use_logger:
+                    log.info(line)
+                else:
+                    print(line)
+
+            if clear:
+                self.lines = []
 
 
 def generate_password():
@@ -218,10 +274,6 @@ def ensure_dir(path):
             raise
 
 
-def extension_from_filename(filename):
-    return filename.rsplit('.')[-1]
-
-
 def make_csv_response(csv_data, filename):
     """
     :param csv_data: A string with the contents of a csv file in it
@@ -302,17 +354,6 @@ def from_base62(s):
         result = result * 62 + BASE62_MAP.index(c)
 
     return result
-
-
-def read_file(filename):
-    with open(filename, 'rb') as f:
-        file_data = f.read()
-        return file_data
-
-
-def write_file(filename, data):
-    with open(filename, 'wb') as f:
-        f.write(data)
 
 
 def chunks(l, n):
