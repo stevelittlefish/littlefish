@@ -422,3 +422,9 @@ def print_sql_debug_timings():
         log.exception('Exception in SQL profiling code.  Ignoring.')
 
 
+def is_uk_mobile_number(phone_number):
+    """Is the passed in phone number a uk mobile number"""
+    stripped = phone_number.replace(' ', '')
+
+    return stripped.startswith('+447') or stripped.startswith('07')
+
