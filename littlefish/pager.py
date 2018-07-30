@@ -159,6 +159,25 @@ class Pager(object):
 
         return out
 
+    @property
+    def first_item_number(self):
+        """
+        :return: The first "item number", used when displaying messages to the user
+        like "Displaying items 1 to 10 of 123" - in this example 1 would be returned
+        """
+        return self.offset + 1
+
+    @property
+    def last_item_number(self):
+        """
+        :return: The last "item number", used when displaying messages to the user
+        like "Displaying items 1 to 10 of 123" - in this example 10 would be returned
+        """
+        n = self.first_item_number + self.page_size - 1
+        if n > self.total_items:
+            return self.total_items
+        return n
+
 
 class SimplePager(Pager):
     """
