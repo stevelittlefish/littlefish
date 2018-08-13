@@ -211,6 +211,40 @@ class SimplePager(Pager):
         return range(start, end + 1)
 
 
+class InMemoryPager(Pager):
+    """
+    Use this when you absolutely have to load everything and page in memory.  You can access
+    all of the items through the all_items attribute after initialising this object
+    """
+    def __init__(self, page_size, page_number, query):
+        self.page_size = page_size
+
+        try:
+            self.page_number = int(page_number)
+        except ValueError:
+            self.page_number = 1
+        
+        if self.page_number < 1:
+            self.page_number = 1
+        
+        self.query = query
+        # Load everything
+        self.all_items = query.all()
+        
+        # Do the paging here
+        self.total_items = len(self.all_items)
+        self.total_pages = (self.total_items - 1) // page_size + 1
+        
+        if self.page_number > self.total_pages:
+            self.page_number = self.total_pages
+        
+        self.offset = self.page_size * (self.page_number - 1)
+        if self.offset < 0:
+            self.offset = 1
+
+        self.items = self.all_items[self.offset:self.offset + self.page_size]
+
+
 class ViewAllPager(object):
     """
     Uses the same API as pager, but lists all items on a single page.  This is to allow
