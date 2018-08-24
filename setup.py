@@ -6,14 +6,14 @@ if sys.version_info.major < 3:
 
 setup(
     name='littlefish',
-    packages=['littlefish', 'littlefish.background'],
+    packages=['littlefish', 'littlefish.background', 'littlefish.sessiondata'],
     include_package_data=True,
-    version='0.0.21',
+    version='0.0.22',
     description='Flask webapp utility functions by Little Fish Solutions LTD',
     author='Stephen Brown (Little Fish Solutions LTD)',
     author_email='opensource@littlefish.solutions',
     url='https://github.com/stevelittlefish/littlefish',
-    download_url='https://github.com/stevelittlefish/littlefish/archive/v0.0.21.tar.gz',
+    download_url='https://github.com/stevelittlefish/littlefish/archive/v0.0.22.tar.gz',
     keywords=['flask', 'utility', 'time', 'pager'],
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
