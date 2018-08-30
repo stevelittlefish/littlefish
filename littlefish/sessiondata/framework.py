@@ -42,8 +42,11 @@ class SessionVar(object):
     def __set__(self, instance, value):
         if instance is None:
             raise Exception('SessionVars can only be set through SessionData instances')
-
-        instance._set_session_value(self.key, self.to_json_val(value))
+        
+        if value is None:
+            instance._set_session_value(self.key, None)
+        else:
+            instance._set_session_value(self.key, self.to_json_val(value))
 
     def to_json_val(self, val):
         """
@@ -75,7 +78,7 @@ class SessionData(object):
         self._base_key = base_key
 
         if base_key not in session:
-            session[self.base_key] = {}
+            session[self._base_key] = {}
 
         self._data_dict = session[base_key]
         
