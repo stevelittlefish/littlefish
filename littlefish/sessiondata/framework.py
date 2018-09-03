@@ -106,3 +106,17 @@ class SessionData(object):
     def _set_session_value(self, key, value):
         self._data_dict[key] = value
 
+    def get_data(self):
+        """
+        :return: the raw data dictionary. This can be used to restore the sessiondata after the
+                 flask session is cleared
+        """
+        return self._data_dict
+
+    def restore_data(self, data_dict):
+        """
+        Restore the data dict - update the flask session and this object
+        """
+        session[self._base_key] = data_dict
+        self._data_dict = session[self._base_key]
+
