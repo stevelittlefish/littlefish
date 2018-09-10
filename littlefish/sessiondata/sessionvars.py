@@ -23,6 +23,11 @@ class SessionStr(_Var):
         return str(val)
 
 
+class SessionBool(_Var):
+    def to_json_val(self, val):
+        return bool(val)
+
+
 class SessionDecimal(_Var):
     def to_json_val(self, val):
         if not isinstance(val, (decimal.Decimal, int)):
