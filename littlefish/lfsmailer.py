@@ -9,6 +9,7 @@ import json
 import traceback
 import pprint
 import email.utils
+import re
 
 from . import timetool
 
@@ -26,6 +27,10 @@ email_to_override = None
 dump_email_body = None
 _configured = False
 _error_reporting_obscured_fields = None
+
+email_regex_string = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
+email_regex = re.compile(r'^{}$'.format(email_regex_string))
+formatted_address_regex = re.compile(r'^([^,<]+)<({})>$'.format(email_regex_string))
 
 
 def init(app):
@@ -57,6 +62,25 @@ def format_address(email_address, name=None):
     if name is None:
         return email_address
     return '{} <{}>'.format(name, email_address)
+
+
+def parse_address(formatted_address):
+    """
+    :param formatted_address: A string like "email@address.com" or "My Email <email@address.com>"
+    
+    :return: Tuple: (address, name)
+    """
+    if email_regex.match(formatted_address):
+        # Just a raw address
+        return (formatted_address, None)
+    
+    match = formatted_address_regex.match(formatted_address)
+
+    if match:
+        (name, email) = match.group(1, 2)
+        return email.strip(), name.strip()
+
+    raise ValueError('"{}" is not a valid formatted address'.format(formatted_address))
 
 
 def send_text_mail_single(to_email_address, to_name, subject, body, from_address=None):
