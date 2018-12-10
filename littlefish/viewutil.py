@@ -33,7 +33,7 @@ def internal_error(exception, template_path, is_admin, db=None):
     if db:
         try:
             db.session.rollback()
-        except:
+        except:  # noqa: E722
             pass
 
     title = str(exception)
@@ -42,17 +42,22 @@ def internal_error(exception, template_path, is_admin, db=None):
  
     log.error('Exception caught: {}\n{}'.format(title, message))
 
-    if current_app.config['TEST_MODE']:
+    if current_app.config.get('TEST_MODE'):
+        show_detailed_error = True
         message = 'Note: You are seeing this error message because the server is in test mode.\n\n{}'.format(message)
     elif is_admin:
+        show_detailed_error = True
         message = 'Note: You are seeing this error message because you are a member of staff.\n\n{}'.format(message)
     else:
         title = '500 Internal Server Error'
         message = 'Something went wrong while processing your request.'
         preformat = False
+        show_detailed_error = False
     
     try:
-        return render_template(template_path, title=title, message=message, preformat=preformat), 500
-    except:
+        return render_template(template_path, title=title, message=message, preformat=preformat,
+                               exception=exception, is_admin=is_admin,
+                               show_detailed_error=show_detailed_error), 500
+    except:  # noqa: E722
         log.exception('Error rendering error page!')
         return '500 Internal Server Error', 500
