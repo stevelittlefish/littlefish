@@ -103,6 +103,9 @@ class SessionList(_Var):
         :param item_type: SessionVar defining the type of each item in the list.  The key attribute
         of item_type will be ignored - you can just pass in None
         """
+        if isinstance(item_type, type):
+            raise ValueError('item_type needs to be an instance of a SessionVar and not a class')
+
         super().__init__(key, default_value=default_value)
         
         self.item_type = item_type

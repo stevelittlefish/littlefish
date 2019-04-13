@@ -31,7 +31,7 @@ BASE62_MAP = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 PHONE_NUMBER_DISALLOWED_SYMBOLS = re.compile('[^0-9+]+')
 
-paragraph_split_regex = re.compile(r'\n\n+')
+paragraph_split_regex = re.compile(r'(\r\n|\n\r){2,}')
 
 
 class UpdateLogger(object):

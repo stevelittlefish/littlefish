@@ -31,7 +31,10 @@ class SessionVar(object):
 
         if instance._has_session_value(self.key):
             json_val = instance._get_session_value(self.key)
+            if json_val is None:
+                return None
             return self.from_json_val(json_val)
+
         elif self.default_value == NoDefault:
             raise AttributeError('Attribute "{}" hasn\'t been set for {} instance'.format(
                 self.key, owner.__name__

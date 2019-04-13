@@ -215,7 +215,7 @@ Message:
 
             msg = '%s\nRequest:\n\nurl:      %s\nmethod:   %s\nendpoint: %s\nform:     %s\n' % \
                 (msg, url, method, endpoint, form)
-        except:
+        except Exception:
             traceback.print_exc()
 
         # Try to append the session
@@ -228,7 +228,7 @@ Message:
                 cls=JSONEncoder
             )
             msg = '%s\nSession:\n\n%s\n' % (msg, session_str)
-        except:
+        except Exception:
             traceback.print_exc()
         
         return msg
@@ -266,7 +266,7 @@ Message:
 
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except Exception:
             self.handleError(record)
 
 
