@@ -5,7 +5,7 @@ Utilities to manage Celery
 import logging
 from functools import wraps
 
-from celery import current_task, signals
+from celery import current_task
 
 from littlefish import lfsmailer
 from littlefish import redisutil
@@ -21,17 +21,27 @@ class CeleryEmailHandler(lfsmailer.LfsSmtpHandler):
         return message
 
 
-def get_enable_celery_email_logging_function(site_name):
+def get_enable_celery_error_reporting_function(site_name, from_address):
+    """
+    Use this to enable error reporting.  You need to put the following in your tasks.py or wherever you
+    want to create your celery instance:
+
+    celery = Celery(__name__)
+
+    enable_celery_email_logging = get_enable_celery_error_reporting_function('My Website [LIVE]', 'errors@mywebsite.com')
+    after_setup_logger.connect(enable_celery_email_logging)
+    after_setup_task_logger.connect(enable_celery_email_logging)
+    """
     def enable_celery_email_logging(sender, signal, logger, loglevel, logfile, format, colorize, **kwargs):
         from celery import current_app
-        log.info('Initialising Celery task error reporting for logger {}'.format(logger.name))
+        log.info('>> Initialising Celery task error reporting for logger {}'.format(logger.name))
         
         send_errors = current_app.conf['CELERY_SEND_TASK_ERROR_EMAILS']
         send_warnings = current_app.conf['CELERY_SEND_TASK_WARNING_EMAILS']
 
         if send_errors or send_warnings:
             error_email_subject = '{} Celery ERROR!'.format(site_name)
-            celery_handler = CeleryEmailHandler('errors@confidentialclinics.com', current_app.conf['ADMIN_EMAILS'],
+            celery_handler = CeleryEmailHandler(from_address, current_app.conf['ADMIN_EMAILS'],
                                                 error_email_subject)
 
             if send_warnings:
@@ -44,13 +54,12 @@ def get_enable_celery_email_logging_function(site_name):
     return enable_celery_email_logging
 
 
-def init_celery(app, celery, site_name):
+def init_celery(app, celery):
     """
     Initialise Celery and set up logging
 
     :param app: Flask app
     :param celery: Celery instance
-    :param site_name: Used in error email subjects, i.e. 'My Awesome Website [Live]'
     """
     celery.conf.update(app.config)
     
@@ -64,10 +73,6 @@ def init_celery(app, celery, site_name):
                 return TaskBase.__call__(self, *args, **kwargs)
 
     celery.Task = ContextTask
-    
-    enable_celery_email_logging = get_enable_celery_email_logging_function(site_name)
-    signals.after_setup_task_logger.connect(enable_celery_email_logging)
-    signals.after_setup_logger.connect(enable_celery_email_logging)
     
     return celery
 

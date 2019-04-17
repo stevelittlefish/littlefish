@@ -32,6 +32,8 @@ email_regex_string = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
 email_regex = re.compile(r'^{}$'.format(email_regex_string))
 formatted_address_regex = re.compile(r'^([^,<]+)<({})>$'.format(email_regex_string))
 
+DEBUG_ERROR_EMAIL_SENDING = False
+
 
 def init(app):
     global host, port, username, password, use_tls, default_email_from, email_to_override,\
@@ -259,6 +261,8 @@ Message:
 
             # Finally send the message!
             if send_email:
+                if DEBUG_ERROR_EMAIL_SENDING:
+                    log.info('@@@> ! Sending error email to {} !'.format(self.toaddrs))
                 send_text_mail(self.toaddrs, self.subject, msg, self.fromaddr)
             else:
                 log.info('!! WARNING: Not sending email as too many emails have been sent in the past minute !!')
