@@ -132,7 +132,7 @@ class ContentScanner:
         :param endpoint: The endpoint that we are defining args for
         """
         if endpoint in self.endpoint_argument_functions:
-            raise ConfigurationError(f'Added multiple arg functions for enpoint: {endpoint}')
+            raise ConfigurationError('Added multiple arg functions for enpoint: {}'.format(endpoint))
 
         def decorator(f):
             self.endpoint_argument_functions[endpoint] = f
@@ -165,14 +165,18 @@ class ContentScanner:
             blueprint_name = endpoint_parts[0] if len(endpoint_parts) > 1 else None
 
             if self.blueprints is not None and blueprint_name not in self.blueprints:
-                log.debug(f'Skipping rule {rule} due to blueprint ({blueprint_name})')
+                log.debug('Skipping rule {} due to blueprint ({})'.format(
+                    rule, blueprint_name
+                ))
                 continue
 
             if rule.endpoint in self.skip:
-                log.debug(f'Skipping rule {rule}')
+                log.debug('Skipping rule {}'.format(rule))
                 continue
 
-            log.debug(f'[{blueprint_name}] {rule.endpoint} {rule.methods} {rule}')
+            log.debug('[{}] {} {} {}'.format(
+                blueprint_name, rule.endpoint, rule.methods, rule
+            ))
 
             results += self.scan_rule(rule, generate_urls, inspect_content, inspect_meta_description,
                                       inspect_alt_tags, inspect_title)
@@ -196,9 +200,9 @@ class ContentScanner:
             # The function has args!
             args_function = self.endpoint_argument_functions.get(rule.endpoint)
             if not args_function:
-                raise ConfigurationError(f'No args function for endpoint "{rule.endpoint}". You need to use the '
+                raise ConfigurationError('No args function for endpoint "{}". You need to use the '
                                          'args_function decorator to add a function that yields all of the '
-                                         'combinations of arguments for this function')
+                                         'combinations of arguments for this function'.format(rule.endpoint))
         else:
             def args_function():
                 return [{}]
@@ -206,7 +210,7 @@ class ContentScanner:
         results = []
 
         for kwargs in args_function():
-            log.debug(f' > args: {kwargs}')
+            log.debug(' > args: {}'.format(kwargs))
             with self.app.test_request_context():
                 result = ScannerResult(rule.endpoint, kwargs)
                 
@@ -214,17 +218,21 @@ class ContentScanner:
                     try:
                         result.url = url_for(rule.endpoint, _external=True, _scheme=self.scheme, **kwargs)
                     except BuildError as e:
-                        raise InvalidViewArguments(f'The arguments {kwargs} are not valid for endpoint '
-                                                   f'{rule.endpoint}') from e
+                        raise InvalidViewArguments('The arguments {} are not valid for endpoint {}'
+                                                   .format(kwargs, rule.endpoint)) from e
 
                 if inspect_content:
                     try:
                         response = view_function(**kwargs)
                     except Exception as e:
                         if kwargs:
-                            error_message = f'Endpoint {rule.endpoint} with args {kwargs} raised an exception'
+                            error_message = 'Endpoint {} with args {} raised an exception'.format(
+                                rule.endpoint, kwargs
+                            )
                         else:
-                            error_message = f'Endpoint {rule.endpoint} raised an exception'
+                            error_message = 'Endpoint {rule.endpoint} raised an exception'.format(
+                                rule.endpoint
+                            )
 
                         raise ViewRaisedException(error_message) from e
 
@@ -241,7 +249,9 @@ class ContentScanner:
                                 response_text += response_part.decode('utf-8')
                     
                     truncated_response_text = response_text.replace('\n', '')[:30]
-                    log.debug(f'{status_code} ({mimetype}) {truncated_response_text}...')
+                    log.debug('{} ({}) {}...'.format(
+                        status_code, mimetype, truncated_response_text
+                    ))
                     result.status_code = status_code
                     result.mime_type = mimetype
 
@@ -253,7 +263,7 @@ class ContentScanner:
                             if head:
                                 meta_desc_tags = head.find_all('meta', attrs={"name": re.compile(r"description", re.I)})
                                 if len(meta_desc_tags) > 1:
-                                    raise HtmlParsingError(f'Found multiple description tags for endpoint {rule.endpoint}')
+                                    raise HtmlParsingError('Found multiple description tags for endpoint {}'.format(rule.endpoint))
                                 elif len(meta_desc_tags) == 1:
                                     result.meta_description = meta_desc_tags[0]['content']
 
