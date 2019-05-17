@@ -211,7 +211,7 @@ class ContentScanner:
 
         for kwargs in args_function():
             log.debug(' > args: {}'.format(kwargs))
-            with self.app.test_request_context():
+            with self.app.app_context():
                 result = ScannerResult(rule.endpoint, kwargs)
                 
                 if generate_urls:
