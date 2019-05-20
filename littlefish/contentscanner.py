@@ -109,12 +109,14 @@ class SiteMapEntry(object):
 
 
 class ContentScanner:
-    def __init__(self, app, blueprints=None, skip=[], scheme='http'):
+    def __init__(self, app, blueprints=None, skip=[], scheme='http', server_name=None):
         """
         :param app: The flask app
         :param blueprints: List of blueprints to scan, or None to scan all of them
         :param skip: List of endpoints to skip
         :param scheme: http or https - for url generation
+        :param server_name: The server name used for url generation.  If this is not specified we will attempt
+                            to extract this from the SERVER_NAME variable in app.config
         """
         self.app = app
         self.blueprints = blueprints
@@ -122,6 +124,13 @@ class ContentScanner:
         self.scheme = scheme
         # Maps endpoint -> function to get arguments
         self.endpoint_argument_functions = {}
+        if server_name is None:
+            if not app.config.get('SERVER_NAME'):
+                raise ValueError('No server name passed in and no SERVER_NAME specified in flask config')
+
+            self.server_name = app.config['SERVER_NAME']
+        else:
+            self.server_name = server_name
 
     def args_function(self, endpoint):
         """
@@ -208,10 +217,12 @@ class ContentScanner:
                 return [{}]
         
         results = []
+        
+        base_url = '{}://{}'.format(self.scheme, self.server_name)
 
         for kwargs in args_function():
             log.debug(' > args: {}'.format(kwargs))
-            with self.app.app_context():
+            with self.app.test_request_context(base_url=base_url):
                 result = ScannerResult(rule.endpoint, kwargs)
                 
                 if generate_urls:
@@ -230,7 +241,7 @@ class ContentScanner:
                                 rule.endpoint, kwargs
                             )
                         else:
-                            error_message = 'Endpoint {rule.endpoint} raised an exception'.format(
+                            error_message = 'Endpoint {} raised an exception'.format(
                                 rule.endpoint
                             )
 
