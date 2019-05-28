@@ -74,7 +74,7 @@ class HtmlParsingError(Exception):
 
 class ScannerResult:
     def __init__(self, endpoint, args, url=None, status_code=None, mime_type=None, title=None,
-                 meta_description=None, missing_alt_tags=[]):
+                 meta_description=None, missing_alt_tags=[], last_modified=None):
         self.endpoint = endpoint
         self.args = args
         self.url = url
@@ -83,6 +83,10 @@ class ScannerResult:
         self.title = title
         self.meta_description = meta_description
         self.missing_alt_tags = missing_alt_tags
+        if last_modified:
+            self.last_modified = last_modified
+        else:
+            self.last_modified = datetime.datetime.utcnow()
     
     @property
     def is_html(self):
@@ -279,6 +283,8 @@ class ContentScanner:
                         if mimetype.startswith('text/'):
                             for response_part in response.response:
                                 response_text += response_part.decode('utf-8')
+                        if response.last_modified:
+                            result.last_modified = response.last_modified
                     elif isinstance(response, tuple):
                         if len(response) != 2:
                             raise ValueError('Unhandled responstype: tuple with length {}'
@@ -288,8 +294,7 @@ class ContentScanner:
                             raise ValueError('Unhandled response_type: tuple with non str as first item')
                         mimetype = 'text/html'
                     else:
-                        # TODO:
-                        print(type(response), response)
+                        raise ValueError('Unhandled response type: {}'.format(type(response)))
                     
                     truncated_response_text = response_text.replace('\n', '')[:30]
                     log.debug('{} ({}) {}...'.format(
@@ -345,13 +350,12 @@ class ContentScanner:
 
         return results
 
-    def scan_for_sitemap(self, priority_map={}, modified=None, change_freq='daily', default_priority='0.5',
+    def scan_for_sitemap(self, priority_map={}, change_freq='daily', default_priority='0.5',
                          inspect_content=False, inspect_title=False):
         # Scan through the pages and return a list of sitemap entries
         results = self.scan(generate_urls=True, inspect_content=inspect_content, inspect_title=inspect_title)
         sitemap = []
 
-        modified = datetime.datetime.now().date().isoformat()
         for result in results:
             if inspect_content:
                 if result.status_code != 200:
@@ -367,59 +371,7 @@ class ContentScanner:
                 # Make one up!
                 title = titlecase.titlecase(result.endpoint.split('.')[1].replace('_', ' '))
 
-            sitemap.append(SiteMapEntry(result.url, modified, change_freq, priority, title))
+            sitemap.append(SiteMapEntry(result.url, result.modified, change_freq, priority, title))
 
         return sitemap
 
-
-# if __name__ == '__main__':
-#     from app import create_app
-#     from models import Product, NewsPost
-#
-#     app = create_app(initialise_db=True,
-#                      initialise_extensions=True,
-#                      initialise_templating=True,
-#                      initialise_blueprints=True,
-#                      initialise_background_tasks=False,
-#                      initialise_db_dependent=True,
-#                      initialise_misc=True)
-#
-#     BLUEPRINTS = ['main']
-#     SKIP = ['main.raise_exception', 'main.site_map']
-#
-#     scanner = ContentScanner(app, blueprints=BLUEPRINTS, skip=SKIP, scheme='https')
-#
-#     @scanner.args_function('main.view_product_details')
-#     def view_product_details_args():
-#         products = Product.query.all()
-#         for product in products:
-#             yield {'url_name': product.url_name}
-#
-#     @scanner.args_function('main.view_post')
-#     def view_post_args():
-#         news_posts = NewsPost.query.all()
-#         for post in news_posts:
-#             yield {'nice_name': post.nice_name}
-#
-#     results = scanner.scan(True, True, True, True, True)
-#
-#     print()
-#     print('*' * 80)
-#
-#     for result in results:
-#         print()
-#         print(f'{result.endpoint}')
-#         print('-' * len(result.endpoint))
-#         print(result.url)
-#         print(f'{result.status_code} {result.mime_type}')
-#         print(f'args: {result.args}')
-#         print(f'title: {result.title}')
-#         if result.needs_meta_description:
-#             print('!!!! No Meta Description! !!!!')
-#         else:
-#             print(f'description: {result.meta_description}')
-#
-#         if result.missing_alt_tags:
-#             print(f'There are {len(result.missing_alt_tags)} images with missing alt tags:')
-#             for image in result.missing_alt_tags:
-#                 print(f'  - {image}')
