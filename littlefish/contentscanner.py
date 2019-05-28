@@ -196,11 +196,7 @@ class ContentScanner:
                 skip = True
             else:
                 for regexp in self.skip_regexps:
-                    log.debug('Searching for {}'.format(regexp))
-                    log.debug(' -> {} ?'.format(rule.endpoint))
-                    log.debug(regexp.search(rule.endpoint))
                     if regexp.search(rule.endpoint):
-                        log.debug('Skipping rule {}'.format(rule))
                         skip = True
                         break
 
