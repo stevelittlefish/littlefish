@@ -371,7 +371,7 @@ class ContentScanner:
                 # Make one up!
                 title = titlecase.titlecase(result.endpoint.split('.')[1].replace('_', ' '))
 
-            sitemap.append(SiteMapEntry(result.url, result.modified, change_freq, priority, title))
+            sitemap.append(SiteMapEntry(result.url, result.last_modified, change_freq, priority, title))
 
         return sitemap
 
