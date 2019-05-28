@@ -74,7 +74,7 @@ class HtmlParsingError(Exception):
 
 class ScannerResult:
     def __init__(self, endpoint, args, url=None, status_code=None, mime_type=None, title=None,
-                 meta_description=None, missing_alt_tags=None):
+                 meta_description=None, missing_alt_tags=[]):
         self.endpoint = endpoint
         self.args = args
         self.url = url
@@ -109,18 +109,24 @@ class SiteMapEntry(object):
 
 
 class ContentScanner:
-    def __init__(self, app, blueprints=None, skip=[], scheme='http', server_name=None):
+    def __init__(self, app, blueprints=None, skip=[], scheme='http', server_name=None,
+                 ignore_images_containing=[]):
         """
         :param app: The flask app
         :param blueprints: List of blueprints to scan, or None to scan all of them
-        :param skip: List of endpoints to skip
+        :param skip: List of endpoints to skip.  The list can contain regular expressions and strings
         :param scheme: http or https - for url generation
         :param server_name: The server name used for url generation.  If this is not specified we will attempt
                             to extract this from the SERVER_NAME variable in app.config
+        :param ignore_images_containing: When scanning images, images with sources which contain
+                                         any of the strings in this list will be ignored
         """
         self.app = app
         self.blueprints = blueprints
-        self.skip = skip
+        self.skip_strings = [s for s in skip if isinstance(s, str)]
+        self.skip_regexps = [r for r in skip if hasattr(r, 'search')]
+        assert len(self.skip_strings) + len(self.skip_regexps) == len(skip), \
+            'Skip list must only contain strings and regular expressions'
         self.scheme = scheme
         # Maps endpoint -> function to get arguments
         self.endpoint_argument_functions = {}
@@ -131,6 +137,7 @@ class ContentScanner:
             self.server_name = app.config['SERVER_NAME']
         else:
             self.server_name = server_name
+        self.ignore_images_containing = ignore_images_containing
 
     def args_function(self, endpoint):
         """
@@ -178,8 +185,22 @@ class ContentScanner:
                     rule, blueprint_name
                 ))
                 continue
+            
+            skip = False
 
-            if rule.endpoint in self.skip:
+            if rule.endpoint in self.skip_strings:
+                skip = True
+            else:
+                for regexp in self.skip_regexps:
+                    log.debug('Searching for {}'.format(regexp))
+                    log.debug(' -> {} ?'.format(rule.endpoint))
+                    log.debug(regexp.search(rule.endpoint))
+                    if regexp.search(rule.endpoint):
+                        log.debug('Skipping rule {}'.format(rule))
+                        skip = True
+                        break
+
+            if skip:
                 log.debug('Skipping rule {}'.format(rule))
                 continue
 
@@ -258,6 +279,17 @@ class ContentScanner:
                         if mimetype.startswith('text/'):
                             for response_part in response.response:
                                 response_text += response_part.decode('utf-8')
+                    elif isinstance(response, tuple):
+                        if len(response) != 2:
+                            raise ValueError('Unhandled responstype: tuple with length {}'
+                                             .format(len(response)))
+                        response_text, status_code = response
+                        if not isinstance(response_text, str):
+                            raise ValueError('Unhandled response_type: tuple with non str as first item')
+                        mimetype = 'text/html'
+                    else:
+                        # TODO:
+                        print(type(response), response)
                     
                     truncated_response_text = response_text.replace('\n', '')[:30]
                     log.debug('{} ({}) {}...'.format(
@@ -272,9 +304,13 @@ class ContentScanner:
                         if inspect_meta_description:
                             head = soup.find('head')
                             if head:
-                                meta_desc_tags = head.find_all('meta', attrs={"name": re.compile(r"description", re.I)})
+                                meta_desc_tags = head.find_all('meta', attrs={"name": re.compile(r"^\s*description\s*$", re.I)})
                                 if len(meta_desc_tags) > 1:
-                                    raise HtmlParsingError('Found multiple description tags for endpoint {}'.format(rule.endpoint))
+                                    all_tags = '; '.join([str(t) for t in meta_desc_tags])
+                                    raise HtmlParsingError(
+                                        'Found multiple description tags for endpoint {}: {}'
+                                        .format(rule.endpoint, all_tags)
+                                    )
                                 elif len(meta_desc_tags) == 1:
                                     result.meta_description = meta_desc_tags[0]['content']
 
@@ -282,6 +318,17 @@ class ContentScanner:
                             missing_alt_tags = []
                             all_images = soup.find_all('img')
                             for image in all_images:
+                                # Sometimes we may need to skip some images
+                                if self.ignore_images_containing:
+                                    src = image.get('src')
+                                    skip = False
+                                    for image_path_search in self.ignore_images_containing:
+                                        if src and image_path_search in src:
+                                            skip = True
+                                            break
+                                    if skip:
+                                        continue
+
                                 alt = image.get('alt')
                                 if alt is None or not alt.strip():
                                     missing_alt_tags.append(str(image))
