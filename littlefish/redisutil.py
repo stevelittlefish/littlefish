@@ -97,13 +97,13 @@ def get_lock(name, timeout=None):
     return connection.lock(format_key(name), timeout=timeout)
 
 
-def get_non_overlapping_task_lock(base_key):
+def get_non_overlapping_task_lock(base_key, timeout=None):
     """
     Returns a lock for non-overlapping tasks
 
     :param base_key: The unique identifier, usually the task name
     """
     key = LOCK_KEY_NON_OVERLAPPING_TASK.format(base_key=base_key)
-    return get_lock(key)
+    return get_lock(key, timeout=timeout)
 
 

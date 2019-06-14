@@ -77,7 +77,22 @@ def init_celery(app, celery):
     return celery
 
 
-def non_overlapping(blocking, key=None):
+def non_overlapping(blocking, key=None, timeout=None):
+    """
+    Celery decorator to make tasks "non-overlapping". When an instance of this task starts
+    while another instance is already running:
+
+    If blocking is set to True then the second task will wait for the first task's lock to be
+    released.
+
+    If blocking is set to False then the second task will abort.
+
+    :param blocking: Whether or not to wait for the existing task to finish
+    :param key: If set, this is the key used in Redis for locking. Otherwise the key is generated
+                from the task name
+    :param timeout: If set, this is how long the lock can be held for, in seconds, before being
+                    automatically released
+    """
     def decorator(f):
         @wraps(f)
         def outer(*args, **kwargs):
@@ -88,7 +103,7 @@ def non_overlapping(blocking, key=None):
             if not base_key:
                 raise Exception('No key for non-overlapping task!')
 
-            lock = redisutil.get_non_overlapping_task_lock(base_key)
+            lock = redisutil.get_non_overlapping_task_lock(base_key, timeout)
 
             if blocking:
                 # Blocking - will wait for the lock
