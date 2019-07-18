@@ -101,6 +101,7 @@ def get_logger():
     if _debug_log is None:
         _debug_log = logging.getLogger('dbg-{}'.format(hostidentifier.identifier))
         _debug_log.setLevel(logging.DEBUG)
+        _debug_log.propagate = False
         
         date_format = '%Y-%m-%d %H:%M:%S'
 
