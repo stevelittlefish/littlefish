@@ -11,8 +11,9 @@ __author__ = 'Stephen Brown (Little Fish Solutions LTD)'
 log = logging.getLogger(__name__)
 
 
-class DontPrint(object):
+class DontPrint:
     pass
+
 
 DONT_PRINT = DontPrint()
 
