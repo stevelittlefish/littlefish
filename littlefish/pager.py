@@ -20,7 +20,7 @@ class Pager(object):
     1, 134, 184, 232, 233, 234, 235, 236, 284, 334, 1000
     """
 
-    def __init__(self, page_size, page_number, query):
+    def __init__(self, page_size, page_number, query, total_items=None):
         self.page_size = page_size
 
         try:
@@ -34,7 +34,11 @@ class Pager(object):
         self.query = query
         
         # Do the paging here
-        self.total_items = query.count()
+        if total_items:
+            self.total_items = total_items
+        else:
+            self.total_items = query.count()
+
         self.total_pages = (self.total_items - 1) // page_size + 1
         
         if self.page_number > self.total_pages:
