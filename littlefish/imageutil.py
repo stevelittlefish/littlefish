@@ -112,13 +112,16 @@ def resize_crop_image(image, dest_w, dest_h, pad_when_tall=False):
         return image
 
 
-def resize_pad_image(image, dest_w, dest_h, pad_with_transparent=False):
+def resize_pad_image(image, dest_w, dest_h, pad_with_transparent=False, pad_colour=None):
     """
     Resize the image and pad to the correct aspect ratio.
     :param image: PIL.Image
     :param dest_w: Target width
     :param dest_h: Target height
     :param pad_with_transparent: If True, make additional padding transparent
+    :param pad_colour: Tuple - RGBA pad colour, for example (255, 0, 0, 255) is red. If
+                       omitted then the colour is automatically allocated based on a
+                       pixel in the image. Override pad_with_transparent
 
     :return: Scaled and padded image
     """
@@ -168,12 +171,13 @@ def resize_pad_image(image, dest_w, dest_h, pad_with_transparent=False):
         scaled_image = scaled_image.convert(mode)
         log.debug('Changed mode from "P" to "{}"'.format(mode))
     
-    if pad_with_transparent:
-        pad_colour = (255, 255, 255, 0)
-    else:
-        # Get the pixel colour for coordinate (0,0)
-        pixels = scaled_image.load()
-        pad_colour = pixels[0, 0]
+    if not pad_colour:
+        if pad_with_transparent:
+            pad_colour = (255, 255, 255, 0)
+        else:
+            # Get the pixel colour for coordinate (0,0)
+            pixels = scaled_image.load()
+            pad_colour = pixels[0, 0]
     
     padded_image = PIL.Image.new(mode, (int(dest_w), int(dest_h)), pad_colour)
     padded_image.paste(scaled_image, offset)
