@@ -302,10 +302,6 @@ def get_warninglog_summary(start_timestamp=None, end_timestamp=None):
         WarningLogMessage.title
     ).all()
 
-    if not rows:
-        log.info('Not sending warning log daily summary - no errors yesterday')
-        return
-    
     summary = []
     for row in rows:
         summary.append(WarningLogSummary(row[0], row[1]))
