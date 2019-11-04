@@ -8,12 +8,12 @@ setup(
     name='littlefish',
     packages=['littlefish', 'littlefish.background', 'littlefish.sessiondata'],
     include_package_data=True,
-    version='0.0.43',
+    version='0.0.44',
     description='Flask webapp utility functions by Little Fish Solutions LTD',
     author='Stephen Brown (Little Fish Solutions LTD)',
     author_email='opensource@littlefish.solutions',
     url='https://github.com/stevelittlefish/littlefish',
-    download_url='https://github.com/stevelittlefish/littlefish/archive/v0.0.43.tar.gz',
+    download_url='https://github.com/stevelittlefish/littlefish/archive/v0.0.44.tar.gz',
     keywords=['flask', 'utility', 'time', 'pager'],
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
@@ -29,7 +29,7 @@ setup(
         'Pillow>=4.0.0',
         'SQLAlchemy>=1.1.0',
         'PyMarkovChain>=1.8',
-        'pytz>=2017.2',
+        'pytz>=2019.1',
         'python-dateutil>=2.6.0',
         'Flask>=0.12.0',
         'Flask-SQLAlchemy>=2.0',
@@ -37,7 +37,9 @@ setup(
         'lxml>=3.7.0',
         'IPy>=0.83',
         'redis>=3.2.1',
-        'celery>=4.3.0'
+        'celery>=4.3.0',
+        'endesive>=1.1.5',
+        'pyOpenSSL>=19.0.0'
     ]
 )
 
