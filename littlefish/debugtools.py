@@ -61,8 +61,11 @@ def print_location(**kwargs):
     """
     :param kwargs: Pass in the arguments to the function and they will be printed too!
     """
-    stack = inspect.stack()[1]
-    debug_print('{}:{} {}()'.format(stack[1], stack[2], stack[3]))
+    try:
+        stack = inspect.stack()[1]
+        debug_print('{}:{} {}()'.format(stack[1], stack[2], stack[3]))
+    except Exception:
+        debug_print('UNKNOWN LOCATION')
 
     for k, v in kwargs.items():
         lesser_debug_print('{} = {}'.format(k, v))

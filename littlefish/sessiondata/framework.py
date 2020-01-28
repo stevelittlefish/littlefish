@@ -40,7 +40,17 @@ class SessionVar(object):
                 self.key, owner.__name__
             ))
         else:
-            return self.default_value
+            if isinstance(self.default_value, list):
+                # Copy list to avoid appending to actual default value
+                default_value = self.default_value[:]
+            elif isinstance(self.default_value, dict):
+                # Copy dict
+                default_value = self.default_value.copy()
+            else:
+                # Just return the default value
+                default_value = self.default_value
+
+            return default_value
 
     def __set__(self, instance, value):
         if instance is None:

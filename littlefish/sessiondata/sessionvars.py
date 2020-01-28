@@ -105,7 +105,7 @@ class SessionList(_Var):
         """
         if isinstance(item_type, type):
             raise ValueError('item_type needs to be an instance of a SessionVar and not a class')
-
+        
         super().__init__(key, default_value=default_value)
         
         self.item_type = item_type
