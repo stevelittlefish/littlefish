@@ -113,17 +113,18 @@ def non_overlapping(blocking, key=None, timeout=None):
                 # Non-blocking - will give up if the lock isn't free
                 return_value = None
                 raised_exception = None
+                has_lock = None
 
                 try:
-                    have_lock = lock.acquire(blocking=False)
-                    if have_lock:
+                    has_lock = lock.acquire(blocking=False)
+                    if has_lock:
                         return_value = f(*args, **kwargs)
                     else:
                         log.info('Aborting task - already running')
                 except Exception as e:
                     raised_exception = e
                 finally:
-                    if have_lock:
+                    if has_lock:
                         lock.release()
                     
                     if raised_exception:
