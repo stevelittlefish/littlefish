@@ -21,6 +21,9 @@ class Pager(object):
     """
 
     def __init__(self, page_size, page_number, query, total_items=None):
+        """
+        :param query: The SQLAlchemy query, or a list of items to be paged
+        """
         self.page_size = page_size
 
         try:
@@ -36,6 +39,8 @@ class Pager(object):
         # Do the paging here
         if total_items:
             self.total_items = total_items
+        elif isinstance(query, list):
+            self.total_items = len(query)
         else:
             self.total_items = query.count()
 
