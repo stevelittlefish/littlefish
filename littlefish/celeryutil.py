@@ -4,6 +4,7 @@ Utilities to manage Celery
 
 import logging
 from functools import wraps
+import datetime
 
 from celery import current_task
 
@@ -17,6 +18,18 @@ log = logging.getLogger(__name__)
 
 
 class CeleryEmailHandler(lfsmailer.LfsSmtpHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.created = datetime.datetime.utcnow()
+
+    def emit(self, record):
+        # Catch errors from reseting sqlalchemy connections on startup
+        now = datetime.datetime.utcnow()
+        if now - self.created < datetime.timedelta(seconds=5) and 'reset or similar' in record.message:
+            print('Not sending error email (startup error): {}'.format(record.message))
+        else:
+            super().emit(record)
+
     def add_details(self, message):
         return message
 
