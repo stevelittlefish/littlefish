@@ -92,6 +92,8 @@ class SessionData(object):
 
         if base_key not in session:
             session[self._base_key] = {}
+            self._data_dict = session[base_key]
+            self.clear()
 
         self._data_dict = session[base_key]
         
