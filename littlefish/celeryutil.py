@@ -25,7 +25,7 @@ class CeleryEmailHandler(lfsmailer.LfsSmtpHandler):
     def emit(self, record):
         # Catch errors from reseting sqlalchemy connections on startup
         now = datetime.datetime.utcnow()
-        if now - self.created < datetime.timedelta(seconds=5) and 'reset or similar' in record.message:
+        if now - self.created < datetime.timedelta(seconds=20) and 'reset or similar' in record.message:
             print('Not sending error email (startup error): {}'.format(record.message))
         else:
             super().emit(record)
