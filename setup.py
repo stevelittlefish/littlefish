@@ -8,12 +8,12 @@ setup(
     name='littlefish',
     packages=['littlefish', 'littlefish.background', 'littlefish.sessiondata'],
     include_package_data=True,
-    version='0.0.56',
+    version='0.0.57',
     description='Flask webapp utility functions by Little Fish Solutions LTD',
     author='Stephen Brown (Little Fish Solutions LTD)',
     author_email='opensource@littlefish.solutions',
     url='https://github.com/stevelittlefish/littlefish',
-    download_url='https://github.com/stevelittlefish/littlefish/archive/v0.0.56.tar.gz',
+    download_url='https://github.com/stevelittlefish/littlefish/archive/v0.0.57.tar.gz',
     keywords=['flask', 'utility', 'time', 'pager'],
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
@@ -39,7 +39,7 @@ setup(
     ],
     extras_require={
         'pdfsigner': [
-            'endesive>=1.1.5',
+            'endesive>=1.2.3',
             'pyOpenSSL>=19.0.0'
         ],
         'celery': [

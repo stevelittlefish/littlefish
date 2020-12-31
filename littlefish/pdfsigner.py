@@ -51,11 +51,11 @@ class Signature:
         timestamp = self.signing_date.strftime('%Y%m%d%H%M%S+00\'00\'')
 
         return {
-            b'sigflags': 3,
-            b'contact': self.contact.encode(),
-            b'location': self.location.encode(),
-            b'signingdate': timestamp.encode(),
-            b'reason': self.reason.encode()
+            'sigflags': 3,
+            'contact': self.contact.encode(),
+            'location': self.location.encode(),
+            'signingdate': timestamp.encode(),
+            'reason': self.reason.encode()
         }
 
 
