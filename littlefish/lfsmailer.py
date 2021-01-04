@@ -31,6 +31,7 @@ _error_reporting_obscured_fields = None
 email_regex_string = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
 email_regex = re.compile(r'^{}$'.format(email_regex_string))
 formatted_address_regex = re.compile(r'^([^,<]+)<({})>$'.format(email_regex_string))
+error_log_tag_regex = re.compile(r'^(Exception caught: )?\(([^)]+)\)')
 
 DEBUG_ERROR_EMAIL_SENDING = False
 
@@ -256,14 +257,23 @@ Message:
             if send_email:
                 self.rate_limiter.append(now)
 
-            msg = self.format(record)
-            msg = self.add_details(msg)
+            base_msg = self.format(record)
+            msg = self.add_details(base_msg)
+
+            # If the messages starts with a bracketted string i.e. (Health Check) then put that in
+            # the subject
+            tag_match = error_log_tag_regex.search(record.msg)
+            tag = ''
+            if tag_match and tag_match.groups():
+                tag = ' ({})'.format(tag_match.groups()[-1])
+            
+            subject = self.subject + tag
 
             # Finally send the message!
             if send_email:
                 if DEBUG_ERROR_EMAIL_SENDING:
                     log.info('@@@> ! Sending error email to {} !'.format(self.toaddrs))
-                send_text_mail(self.toaddrs, self.subject, msg, self.fromaddr)
+                send_text_mail(self.toaddrs, subject, msg, self.fromaddr)
             else:
                 log.info('!! WARNING: Not sending email as too many emails have been sent in the past minute !!')
                 log.info(msg)
