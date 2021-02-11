@@ -32,6 +32,7 @@ Example Usage:
 import logging
 import re
 import datetime
+import urllib.parse
 
 from werkzeug.wrappers import BaseResponse
 from werkzeug.routing import parse_rule, BuildError
@@ -240,10 +241,14 @@ class ContentScanner:
         results = []
         
         base_url = '{}://{}'.format(self.scheme, self.server_name)
-
         for kwargs in args_function():
+            # We need the url_path
+            full_url = url_for(rule.endpoint, **kwargs)
+            parsed_url = urllib.parse.urlparse(full_url)
+            url_path = parsed_url.path
+
             log.debug(' > args: {}'.format(kwargs))
-            with self.app.test_request_context(base_url=base_url):
+            with self.app.test_request_context(url_path, base_url=base_url):
                 result = ScannerResult(rule.endpoint, kwargs)
                 
                 if generate_urls:
