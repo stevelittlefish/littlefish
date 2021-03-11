@@ -224,9 +224,7 @@ def run_health_checks(health_checks):
     return results
 
 
-def run_and_render_health_checks(health_checks=None):
-    results = run_health_checks(health_checks)
-
+def render_health_check_results(results):
     out = ['<table class="health-checks"><tbody>']
     for result in results:
         out.append(
@@ -238,3 +236,8 @@ def run_and_render_health_checks(health_checks=None):
     
     return Markup(''.join(out))
 
+
+def run_and_render_health_checks(health_checks=None):
+    results = run_health_checks(health_checks)
+
+    return render_health_check_results(results)
