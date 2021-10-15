@@ -111,9 +111,11 @@ BOOLEAN = DataType('bool', load_boolean)
 
 class ImportField(object):
     def __init__(self, name, data_type, constructor_field=True, identifier=False,
-                 optional=False, default=None, unchangeable=False):
+                 optional=False, default=None, unchangeable=False, no_update=False,
+                 python_name=None):
         """
-        :param name: The spelling of the python field and keyword argument for constructor
+        :param name: The field in the yaml file. By default this is also the spelling of the
+                     python field and keyword argument for constructor
         :param data_type: A DataType defining the type of this field
         :param constructor_field: Is this field passed in to the constructor
         :param identifier: If True, this field cannot be changed once it is set and is used to
@@ -123,6 +125,11 @@ class ImportField(object):
                          will be set to None if not present
         :param default: Default value for optional arguments that are not present
         :param unchangeable: If True, this can never be updated after it has been inserted
+        :param no_update: This will only be set for new models - existing models will not be updated.
+                          The difference between this and unchangeable is that unchangeable fields will
+                          raise an error if the value in the yaml file is different from the database,
+                          but these will not.
+        :param python_name: Use this to override the spelling of the python variable in the model
         """
         if default is not None and not optional:
             raise ValueError('Only optional arguments can have a default!')
@@ -134,6 +141,8 @@ class ImportField(object):
         self.optional = optional
         self.default = default
         self.unchangeable = unchangeable
+        self.no_update = no_update
+        self._python_name = python_name
 
     def from_yaml(self, s):
         try:
@@ -145,6 +154,13 @@ class ImportField(object):
     @property
     def constant_value(self):
         return self.data_type.constant_value
+
+    @property
+    def python_name(self):
+        if self._python_name:
+            return self._python_name
+
+        return self.name
 
 
 def get_list(data_dict, key, optional=False):
@@ -196,9 +212,22 @@ def import_model(model_class, yaml_data_dict, fields, session, commit=False, sil
     :param insert_only: Don't update existing data - only insert new data
     """
     model_name = model_class.__name__
+
+    # Make sure there are no duplicates in the fields
+    all_field_yaml_names = set()
+    all_field_python_names = set()
+    for field in fields:
+        if field.name in all_field_yaml_names:
+            raise ValueError('Multiple fields in list with same name "{}"'.format(field.name))
+        all_field_yaml_names.add(field.name)
+        
+        if field.python_name in all_field_python_names:
+            raise ValueError('Miltiple fields in list with same python name "{}"'.format(field.python_name))
+        all_field_python_names.add(field.python_name)
     
     # This may seem a little backwards - we process the data first and then validate it afterwards
-    # Create a new dict with a combination of the data from data_dict and any relevant defaults
+    # Create a new dict with a combination of the data from data_dict and any relevant defaults.
+    # This dict maps name -> value
     data = {}
     for field in fields:
         if field.data_type == IGNORE:
@@ -219,17 +248,23 @@ def import_model(model_class, yaml_data_dict, fields, session, commit=False, sil
     # Data now contains processed versions of all of the fields in the yaml data
 
     # Next let's find the identifiers - the fields used to deduplicate this model and to update
-    # existing models instead of creating new ones
-    identifier_keys = [f.name for f in fields if f.identifier]
-
-    for identifier_key in identifier_keys:
+    # existing models instead of creating new ones.  We will store these in a dict mapping yaml
+    # name -> python name
+    identifier_keys = {}
+    for field in fields:
+        if field.identifier:
+            identifier_keys[field.name] = field.python_name
+    
+    # Loop over python names
+    for identifier_key in identifier_keys.values():
         if identifier_key not in data:
             raise ValueError('Indentifier field "{}" not present in data when loading object of '
                              'type {}'.format(identifier_key, model_name))
 
     # Get the identifier for logging
-    identifier = '/'.join([str(data[i]) for i in identifier_keys])
-
+    identifier = '/'.join([str(data[i]) for i in identifier_keys.values()])
+    
+    # These lists use the yaml_names
     all_field_keys = []
     required_field_keys = []
     
@@ -255,8 +290,8 @@ def import_model(model_class, yaml_data_dict, fields, session, commit=False, sil
 
     # Create a list of SQLAlchemy filters to load the model if it exists already
     filters = []
-    for identifier_key in identifier_keys:
-        filters.append(getattr(model_class, identifier_key) == data[identifier_key])
+    for (yaml_key, python_name) in identifier_keys.items():
+        filters.append(getattr(model_class, python_name) == data[yaml_key])
     
     # Load the instance to see if it exists
     model_instance = model_class.query.filter(*filters).one_or_none()
@@ -268,18 +303,20 @@ def import_model(model_class, yaml_data_dict, fields, session, commit=False, sil
 
         return model_instance
 
-    # Convert values and assign to dicts to either pass into constructor, or update the field
+    # Convert values and assign to dicts to either pass into constructor, or update the field.
+    # We start using python_name instead of name from here on as these dicts will be passed into
+    # constructors etc.
     kwargs = {}
     update_fields = {}
     unchangeable_fields = set()
-    
+
     for field in fields:
         if field.data_type == IGNORE:
             # Don't process this field
             continue
         
         if field.unchangeable:
-            unchangeable_fields.add(field.name)
+            unchangeable_fields.add(field.python_name)
         
         # First extract the field from the dict and convert
         if field.name in data:
@@ -290,9 +327,9 @@ def import_model(model_class, yaml_data_dict, fields, session, commit=False, sil
             raise Exception('Required field not present in data dic')
 
         if not model_instance and field.constructor_field:
-            kwargs[field.name] = value
-        elif not field.identifier:
-            update_fields[field.name] = value
+            kwargs[field.python_name] = value
+        elif not field.identifier and not field.no_update:
+            update_fields[field.python_name] = value
 
     # Now we have our field dicts - time to insert / update the object
     if not model_instance:
