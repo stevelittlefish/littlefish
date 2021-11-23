@@ -47,11 +47,13 @@ def resize_image_to_fit(image, dest_w, dest_h):
     return scaled_image
 
 
-def resize_crop_image(image, dest_w, dest_h, pad_when_tall=False):
+def resize_crop_image(image, dest_w, dest_h, pad_when_tall=False, dest_top=None, dest_left=None):
     """
     :param image: PIL.Image
     :param dest_w: Target width
     :param dest_h: Target height
+    :param dest_top: Optional vertical offset when cropping (will be centred if omitted)
+    :param dest_left: Optional horizontal offset when cropping (will be centred if omitted)
     :return: Scaled and cropped image
     """
 
@@ -74,7 +76,16 @@ def resize_crop_image(image, dest_w, dest_h, pad_when_tall=False):
         # Cropping values
         left = 0
         right = dest_w
-        top = (scaled_h - dest_h) / 2.0
+
+        if dest_top is None:
+            top = (scaled_h - dest_h) / 2.0
+        elif dest_top < 0:
+            top = 0
+        elif dest_top > scaled_h - dest_h:
+            top = scaled_h - dest_h
+        else:
+            top = dest_top
+
         bottom = top + dest_h
     else:
         # Image is short and wide - we need to scale to the right height and then crop
@@ -83,7 +94,15 @@ def resize_crop_image(image, dest_w, dest_h, pad_when_tall=False):
         scaled_w = src_w * scale
 
         # Cropping values
-        left = (scaled_w - dest_w) / 2.0
+        if dest_left is None:
+            left = (scaled_w - dest_w) / 2.0
+        elif dest_left < 0:
+            left = 0
+        elif dest_left > scaled_w - dest_w:
+            left = scaled_w - dest_w
+        else:
+            left = dest_left
+
         right = left + dest_w
         top = 0
         bottom = dest_h
