@@ -73,7 +73,11 @@ class SessionDict(_Var):
                                  .format(key, val))
 
             session_var = self.template_dict[key]
-            json_dict[key] = session_var.to_json_val(val[key])
+            item_val = val[key]
+            if item_val is None:
+                json_dict[key] = None
+            else:
+                json_dict[key] = session_var.to_json_val(item_val)
 
         return json_dict
 

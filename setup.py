@@ -4,16 +4,18 @@ from setuptools import setup
 if sys.version_info.major < 3:
     sys.exit('Sorry, this library only supports Python 3')
 
+VERSION = '0.0.66'
+
 setup(
     name='littlefish',
     packages=['littlefish', 'littlefish.background', 'littlefish.sessiondata'],
     include_package_data=True,
-    version='0.0.65',
+    version=VERSION,
     description='Flask webapp utility functions by Little Fish Solutions LTD',
     author='Stephen Brown (Little Fish Solutions LTD)',
     author_email='opensource@littlefish.solutions',
     url='https://github.com/stevelittlefish/littlefish',
-    download_url='https://github.com/stevelittlefish/littlefish/archive/v0.0.65.tar.gz',
+    download_url='https://github.com/stevelittlefish/littlefish/archive/v{}.tar.gz'.format(VERSION),
     keywords=['flask', 'utility', 'time', 'pager'],
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
