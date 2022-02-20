@@ -216,8 +216,8 @@ def format_multiline_html(text):
 
 def to_paragraphs(string):
     # Split the string into parts using multiple returns as a separator
-    parts = paragraph_split_regex.split(string)
-    return flask.Markup('<p>%s</p>' % '</p><p>'.join(parts))
+    parts = [flask.escape(p) for p in paragraph_split_regex.split(string)]
+    return flask.Markup('<p>{}</p>'.format('</p><p>'.join(parts)))
 
 
 def format_filesize(bytes):
@@ -418,7 +418,7 @@ def print_sql_debug_timings():
             total_queries += 1
 
         log.info('<< %s queries took %fs >>' % (total_queries, total_time))
-    except:
+    except Exception:
         log.exception('Exception in SQL profiling code.  Ignoring.')
 
 
