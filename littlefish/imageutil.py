@@ -234,6 +234,13 @@ def resize_image_to_fit_height(image, dest_h):
     return scaled_image
 
 
+def image_from_bytes(image_data):
+    """
+    Load a PIL.Image from a byte array
+    """
+    return PIL.Image.open(io.BytesIO(image_data))
+
+
 def image_to_bytes(image, format='PNG', quality=95):
     image_io = io.BytesIO()
     image.save(image_io, format=format, quality=quality)
