@@ -67,21 +67,40 @@ class Signer:
     to render the signature.  Then get the PDF file (bytes) and pass it into
     get_signed_pdf(...) to sign it.
     """
-    def __init__(self, pfx_path, password, location, reason):
+    def __init__(self, cert_paths, password, location, reason):
         """
-        :param pfx_path: Full path to the PFX file with the certificate
-        :param password: Plain password used to decrypt the PFX file
+        :param cert_paths: Either:
+                           - Full path to the PFX file with the certificate (str)
+                           - Tuple with (path_to_certificate, path_to_key) (str, str)
+        :param password: Plain password used to decrypt the PFX file / private key
         :param location: Where are you signing from i.e. "Steve's House, Cambridge"
         :param reason: Why are you signing i.e. "Fake University Degree Certificate"
         """
-        log.debug('Loading PFX file: "{}"'.format(pfx_path))
+        if isinstance(cert_paths, str):
+            pfx_path = cert_paths
+            log.debug('Loading PFX file: "{}"'.format(pfx_path))
 
-        with open(pfx_path, 'rb') as cert_file:
-            pfx = OpenSSL.crypto.load_pkcs12(cert_file.read(), password)
+            with open(pfx_path, 'rb') as cert_file:
+                pfx = OpenSSL.crypto.load_pkcs12(cert_file.read(), password)
+            
+            self.private_key = pfx.get_privatekey().to_cryptography_key()
+            cert = pfx.get_certificate()
+            self.cert = cert.to_cryptography()
+        else:
+            # Must be a tuple - unpack
+            cert_path, key_path = cert_paths
+
+            log.debug('Loading Cert file: "{}"'.format(cert_path))
+            with open(cert_path, 'rb') as cert_file:
+                cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_file.read())
+
+            log.debug('Loading Key file: "{}"'.format(key_path))
+            with open(key_path, 'rb') as key_file:
+                log.info(password)
+                key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key_file.read(), password.encode())
         
-        self.private_key = pfx.get_privatekey().to_cryptography_key()
-        cert = pfx.get_certificate()
-        self.cert = cert.to_cryptography()
+            self.private_key = key.to_cryptography_key()
+            self.cert = cert.to_cryptography()
 
         name_parts = ['{}={}'.format(name.decode(), value.decode()) for name, value in cert.get_subject().get_components()]
         contact = ', '.join(name_parts)
