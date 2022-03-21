@@ -234,7 +234,7 @@ def import_model(model_class, yaml_data_dict, fields, session, commit=False, sil
             # Do nothing with this field
             continue
 
-        if field.constant_value:
+        if field.constant_value is not None:
             data[field.name] = field.constant_value
         elif field.name in yaml_data_dict:
             raw_value = yaml_data_dict[field.name]
@@ -270,7 +270,7 @@ def import_model(model_class, yaml_data_dict, fields, session, commit=False, sil
     
     # Now that we've loaded the data - it's time to validate that the correct stuff is present!
     for field in fields:
-        if not field.constant_value:
+        if field.constant_value is None:
             all_field_keys.append(field.name)
             if not field.optional:
                 required_field_keys.append(field.name)
