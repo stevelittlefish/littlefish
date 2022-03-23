@@ -13,6 +13,14 @@ __author__ = 'Stephen Brown (Little Fish Solutions LTD)'
 log = logging.getLogger(__name__)
 
 
+class SessionRaw(_Var):
+    """
+    Raw data stored in the session with no validation
+    """
+    def to_json_val(self, val):
+        return val
+
+
 class SessionInt(_Var):
     def to_json_val(self, val):
         return int(val)
