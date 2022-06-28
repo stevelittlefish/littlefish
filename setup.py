@@ -4,7 +4,7 @@ from setuptools import setup
 if sys.version_info.major < 3:
     sys.exit('Sorry, this library only supports Python 3')
 
-VERSION = '0.0.70'
+VERSION = '0.0.71'
 
 setup(
     name='littlefish',

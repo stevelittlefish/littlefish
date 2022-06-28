@@ -139,5 +139,3 @@ class SessionList(_Var):
 
         return out_list
 
-        
-        

@@ -105,3 +105,10 @@ class Enumeration(metaclass=MetaEnumeration):
 
         return StatusTypeDecorator
 
+    @property
+    def select_name(self):
+        return self.code
+
+    @property
+    def select_value(self):
+        return self.code
