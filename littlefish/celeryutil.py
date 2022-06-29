@@ -10,6 +10,7 @@ from celery import current_task
 
 from littlefish import lfsmailer
 from littlefish import redisutil
+from littlefish import loggingutil
 
 
 __author__ = 'Stephen Brown (Little Fish Solutions LTD)'
@@ -65,6 +66,25 @@ def get_enable_celery_error_reporting_function(site_name, from_address):
             logger.addHandler(celery_handler)
 
     return enable_celery_email_logging
+
+
+def get_enable_celery_error_reporting_and_coloured_logging_function(site_name, from_address, show_timestamps):
+    # Get the email enable function
+    enable_celery_email_logging = get_enable_celery_error_reporting_function(site_name, from_address)
+    
+    def init_celery_logging(**kwargs):
+        logger = kwargs.get('logger')
+        if logger:
+            handler = loggingutil.ColourLogHandler(
+                show_timestamps=show_timestamps,
+                celery_mode=True
+            )
+
+            logger.handlers = [handler]
+
+        enable_celery_email_logging(**kwargs)
+
+    return init_celery_logging
 
 
 def init_celery(app, celery):

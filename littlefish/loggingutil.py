@@ -14,38 +14,38 @@ DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
 class ColourLogHandler(logging.StreamHandler):
-    def __init__(self, show_timestamps, *args, **kwargs):
+    def __init__(self, show_timestamps, celery_mode, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.formatters = {
             logging.DEBUG: logging.Formatter(
                 get_coloured_logging_format(
-                    ansi.LIGHT_GREY, show_timestamps=show_timestamps
+                    ansi.GREEN, show_timestamps=show_timestamps, celery_mode=celery_mode
                 )
             ),
             logging.INFO: logging.Formatter(
                 get_coloured_logging_format(
-                    ansi.GREEN, show_timestamps=show_timestamps
+                    ansi.LIGHT_GREEN, show_timestamps=show_timestamps, celery_mode=celery_mode
                 )
             ),
             logging.WARNING: logging.Formatter(
                 get_coloured_logging_format(
-                    ansi.YELLOW, show_timestamps=show_timestamps
+                    ansi.YELLOW, show_timestamps=show_timestamps, celery_mode=celery_mode
                 )
             ),
             logging.ERROR: logging.Formatter(
                 get_coloured_logging_format(
-                    ansi.LIGHT_RED, show_timestamps=show_timestamps
+                    ansi.LIGHT_RED, show_timestamps=show_timestamps, celery_mode=celery_mode
                 )
             ),
             logging.CRITICAL: logging.Formatter(
                 get_coloured_logging_format(
-                    ansi.LIGHT_RED, show_timestamps=show_timestamps
+                    ansi.LIGHT_RED, show_timestamps=show_timestamps, celery_mode=celery_mode
                 )
             ),
             'DEFAULT': logging.Formatter(
                 get_coloured_logging_format(
-                    ansi.DARK_GREY, show_timestamps=show_timestamps
+                    ansi.DARK_GREY, show_timestamps=show_timestamps, celery_mode=celery_mode
                 )
             ),
         }
@@ -55,34 +55,71 @@ class ColourLogHandler(logging.StreamHandler):
         return formatter.format(record)
 
 
-def get_coloured_logging_format(level_colour, show_timestamps=False):
+def get_base_logging_format_template(show_timestamps, celery_mode):
+    meta_format = '{time}{level}{colon}{name}{colon}{message}'
+
+    time = ''
+    if show_timestamps:
+        time = '{time_colour}%(asctime)s{reset} '
+
+    level = '{level_colour}%(levelname)s'
+
+    colon = '{colon_colour}:'
+
+    if celery_mode:
+        name = '{process_name_colour}%(processName)s'
+    else:
+        name = '{name_colour}%(name)s'
+
+    message = '{reset}%(message)s'
+
+    format_template = meta_format.format(
+        time=time,
+        level=level,
+        colon=colon,
+        name=name,
+        message=message
+    )
+
+    return format_template
+
+
+def get_coloured_logging_format(level_colour, show_timestamps=False, celery_mode=False):
     """
     :return Standardized coloured logging format for a specific level
     """
-    logging_format = '{level_colour}%(levelname)s{colon_colour}:{name_colour}%(name)s{colon_colour}:{reset}%(message)s'
+    logging_format = get_base_logging_format_template(
+        show_timestamps=show_timestamps,
+        celery_mode=celery_mode
+    )
 
-    if show_timestamps:
-        logging_format = '{time_colour}%(asctime)s{reset} ' + logging_format
-    
     return logging_format.format(
         time_colour=ansi.CYAN,
         reset=ansi.RESET,
         level_colour=level_colour,
         colon_colour=ansi.DARK_GREY,
-        name_colour=ansi.PURPLE
+        name_colour=ansi.BLUE,
+        process_name_colour=ansi.PURPLE
     )
 
 
-def get_logging_format(show_timestamps=False):
+def get_logging_format(show_timestamps=False, celery_mode=False):
     """
     :return Standardized logging format
     """
-    logging_format = '%(levelname)s:%(name)s:%(message)s'
+    logging_format = get_base_logging_format_template(
+        show_timestamps=show_timestamps,
+        celery_mode=celery_mode
+    )
 
-    if show_timestamps:
-        logging_format = '%(asctime)s ' + logging_format
-    
-    return logging_format
+    return logging_format.format(
+        time_colour='',
+        reset='',
+        level_colour='',
+        colon_colour='',
+        name_colour='',
+        process_name_colour=''
+    )
 
 
 def initialise_logging(debug_mode, show_timestamps=False, colour=False):
@@ -92,7 +129,7 @@ def initialise_logging(debug_mode, show_timestamps=False, colour=False):
 
     handlers = []
     if colour:
-        handlers.append(ColourLogHandler(show_timestamps))
+        handlers.append(ColourLogHandler(show_timestamps, False))
     else:
         handlers.append(logging.StreamHandler())
     
