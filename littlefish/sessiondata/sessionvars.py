@@ -4,7 +4,10 @@ This contains the SessionVar classes - use these to add variables to your Sessio
 
 import logging
 import decimal
-from collections import Mapping
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 from .framework import SessionVar as _Var
 
