@@ -4,3 +4,4 @@ MANIFEST
 dist
 *.swp
 littlefish.egg-info
+build

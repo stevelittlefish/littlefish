@@ -14,6 +14,7 @@ from flask import jsonify, make_response, current_app, request
 import flask
 from flask_sqlalchemy import get_debug_queries
 import jinja2
+import markupsafe
 
 # For backwards compatibility
 from .fileutil import extension_from_filename, read_file, write_file  # noqa
@@ -158,9 +159,9 @@ def format_price(price):
     if price is None:
         return None
     if price >= 0:
-        return jinja2.Markup('&pound;%0.2f' % price)
+        return markupsafe.Markup('&pound;%0.2f' % price)
     else:
-        return jinja2.Markup('-&pound;%0.2f' % -price)
+        return markupsafe.Markup('-&pound;%0.2f' % -price)
 
 
 def format_price_commas(price):
@@ -170,9 +171,9 @@ def format_price_commas(price):
     if price is None:
         return None
     if price >= 0:
-        return jinja2.Markup('&pound;{:,.2f}'.format(price))
+        return markupsafe.Markup('&pound;{:,.2f}'.format(price))
     else:
-        return jinja2.Markup('-&pound;{:,.2f}'.format(-price))
+        return markupsafe.Markup('-&pound;{:,.2f}'.format(-price))
 
 
 def format_price_commas_no_point(price):
@@ -181,7 +182,7 @@ def format_price_commas_no_point(price):
     """
     if price is None:
         return None
-    return jinja2.Markup('&pound;{:,.0f}'.format(price))
+    return markupsafe.Markup('&pound;{:,.0f}'.format(price))
 
 
 def format_commas(number):
@@ -206,10 +207,10 @@ def format_multiline_html(text):
         return text.replace('\r', '')
 
     parts = text.replace('\r', '').split('\n')
-    out = flask.Markup()
+    out = markupsafe.Markup()
     for part in parts:
         if out:
-            out += flask.Markup('<br>')
+            out += markupsafe.Markup('<br>')
         out += flask.escape(part)
     return out
 
@@ -217,7 +218,7 @@ def format_multiline_html(text):
 def to_paragraphs(string):
     # Split the string into parts using multiple returns as a separator
     parts = [flask.escape(p) for p in paragraph_split_regex.split(string)]
-    return flask.Markup('<p>{}</p>'.format('</p><p>'.join(parts)))
+    return markupsafe.Markup('<p>{}</p>'.format('</p><p>'.join(parts)))
 
 
 def format_filesize(bytes):

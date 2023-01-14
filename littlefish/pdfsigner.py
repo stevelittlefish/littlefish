@@ -90,7 +90,6 @@ class Signer:
             # Must be a tuple - unpack
             cert_path, key_path = cert_paths
 
-            log.debug('Loading Cert file: "{}"'.format(cert_path))
             with open(cert_path, 'rb') as cert_file:
                 cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_file.read())
 

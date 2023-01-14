@@ -193,7 +193,7 @@ def load_yaml_from_directory(path):
         if os.path.isfile(filename) and not f.startswith('.'):
             log.info('Loading {}'.format(filename))
             with open(filename, 'r') as stream:
-                data = yaml.load(stream)
+                data = yaml.full_load(stream)
 
                 yield filename, data
 
